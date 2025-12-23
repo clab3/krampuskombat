@@ -238,16 +238,29 @@ def tick(keys):
                 krampus_alive = True
             elif not player.is_krampus and not player.is_dead:
                 non_krampus_alive = True
+        presents_stolen = game_age // 10
         if not non_krampus_alive:
             text_color = "red"
             camera.clear("black")
-            wintext = gamebox.from_text(500, 400, "KRAMPUS WINS", "Arial", 80, text_color, True, True)
+            win_text = gamebox.from_text(
+                500, 400, "KRAMPUS WINS", "Arial", 80, text_color, True, True
+            )
+            score_string = f"Krampus already stole {presents_stolen} presents, and soon they'll all be his!"
         else:
             text_color = "blue"
             camera.clear("white")
-            wintext = gamebox.from_text(500, 400, "You killed Krampus! Christmas is saved!", "Arial", 50, text_color, True, True)
-        camera.draw(wintext)
-        restart = gamebox.from_text(500, 700, "Press B to play again", "Arial", 40, text_color, True)
+            win_string = "You killed Krampus! Christmas is saved!"
+            win_text = gamebox.from_text(
+                500, 400, win_string, "Arial", 50, text_color, True, True
+            )
+            score_string = f"But he did steal {presents_stolen} presents..."
+
+        score_text = gamebox.from_text(
+            500, 500, score_string, "Arial", 25, text_color, True
+        )
+        camera.draw(win_text)
+        camera.draw(score_text)
+        restart = gamebox.from_text(500, 600, "Press B to play again", "Arial", 40, text_color, True)
         camera.draw(restart)
         if pygame.K_b in keys:
             reset_game()
