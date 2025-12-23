@@ -65,8 +65,8 @@ class Kombattant:
         )
         self.num_death_sprites = 12
         self.frame = 0
-        self.display = gamebox.from_image(self.origin_x_pos, self.origin_y_pos, self.idle_sprites[self.frame])
-        self.display.scale_by(display_scale)
+        self.sprite_box = gamebox.from_image(self.origin_x_pos, self.origin_y_pos, self.idle_sprites[self.frame])
+        self.sprite_box.scale_by(display_scale)
         self.current_weapon_life = 0
         self.control_config = control_config
 
@@ -100,20 +100,20 @@ class Kombattant:
             sprites = self.idle_sprites
         else:
             sprites = self.attack_sprites
-        self.display.image = sprites[adjusted_frame]
+        self.sprite_box.image = sprites[adjusted_frame]
 
     def read_key(self, key):
         # can't do anything if you're dead
         if self.is_dead:
             return
         if key == self.control_config.right:
-            self.display.xspeed = self.speed
+            self.sprite_box.xspeed = self.speed
         if key == self.control_config.left:
-            self.display.xspeed = -self.speed
+            self.sprite_box.xspeed = -self.speed
         if key == self.control_config.up:
-            self.display.yspeed = -self.speed
+            self.sprite_box.yspeed = -self.speed
         if key == self.control_config.down:
-            self.display.yspeed = self.speed
+            self.sprite_box.yspeed = self.speed
         if key in {self.control_config.special_1, self.control_config.special_2}:
             self._attack()
 
@@ -121,20 +121,20 @@ class Kombattant:
         if self.current_weapon:
             logging.info(f'Player #{self.player_number} blocked from dropping bomb bc it has already deployed 1')
             return
-        self.current_weapon = Bomb(self.display.x, self.display.y, self.bomb_life)
+        self.current_weapon = Bomb(self.sprite_box.x, self.sprite_box.y, self.bomb_life)
         self.current_weapon_life = self.bomb_life
         self.all_weapons.add(self.current_weapon)
 
     def die(self) -> None:
-        self.display.xspeed = 0
-        self.display.yspeed = 0
+        self.sprite_box.xspeed = 0
+        self.sprite_box.yspeed = 0
         self.is_dead = True
         self.frame = 0
 
     def reset(self) -> None:
         self.is_dead = False
-        self.display.x = self.origin_x_pos
-        self.display.y = self.origin_y_pos
+        self.sprite_box.x = self.origin_x_pos
+        self.sprite_box.y = self.origin_y_pos
         self.current_weapon = None
         self.is_idle = True
         self.frame = 0

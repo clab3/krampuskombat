@@ -51,20 +51,13 @@ counter = 0
 game_on = False
 stage = 1
 
-moving1 = gamebox.from_color(200, 700, "black", 200, 15)
-moving2 = gamebox.from_color(700, 600, "black", 200, 15)
-moving3 = gamebox.from_color(400, 500, "black", 200, 15)
-moving4 = gamebox.from_color(100, 400, "black", 200, 15)
-moving5 = gamebox.from_color(900, 300, "black", 200, 15)
-moving6 = gamebox.from_color(600, 200, "black", 200, 15)
-moving7 = gamebox.from_color(800, 100, "black", 200, 15)
-moving_platforms = [moving1, moving2, moving3, moving4, moving5, moving6, moving7]
+blocks: list[gamebox.SpriteBox] = []
 
 game_age = 0 # frames
 game_end_point = None
 
-def reset_game():
-    global players, weapons, game_on, game_age, game_end_point, snowballs, snowball_speed, snowball_interval
+def restart_game():
+    global blocks, players, weapons, game_on, game_age, game_end_point, snowballs, snowball_speed, snowball_interval
     for player in players:
         player.reset()
     weapons.clear()
@@ -74,6 +67,11 @@ def reset_game():
     game_age = 0
     snowball_speed = 10
     snowball_interval = 300
+    blocks = []
+    for x in [150, 325, 500, 675, 850]:
+        for y in [100, 250, 400, 550, 700]:
+            new_block = gamebox.from_color(x, y, "brown", 40, 40)
+            blocks.append(new_block)
 
 
 def tick(keys):
@@ -82,8 +80,8 @@ def tick(keys):
         counter += 1
 
         if counter % 5 == 0:
-            numstars = random.randint(0, 7)
-            for i in range(numstars):
+            num_stars = random.randint(0, 7)
+            for i in range(num_stars):
                 stars.append(gamebox.from_color(random.randint(5, 995), 0, "white", 3, 3))
 
         camera.clear("black")
@@ -93,7 +91,7 @@ def tick(keys):
         player_2_instructions = gamebox.from_text(500, 600, "Player 3: Use U,H,J,K to move and Y or I to attack", "Arial", 30, "green")
         start = gamebox.from_text(500, 700, "Press B to begin", "Arial", 40, "green", True)
         if pygame.K_b in keys:
-            game_on = True
+            restart_game()
         for star in stars:
             # move the star
             star.y += 6
@@ -115,6 +113,7 @@ def tick(keys):
         left_wall = gamebox.from_color(0, 400, "black", 30, 1200)
         right_wall = gamebox.from_color(1000, 400, "black", 30, 1200)
         platforms = [floor, ceiling, left_wall, right_wall]
+        platforms.extend(blocks)
         presents_stolen = game_age // 10
         clock_text = gamebox.from_text(850, 50, f"Presents stolen: {presents_stolen}", "Arial", 24, "Black")
         camera.draw(clock_text)
@@ -137,36 +136,62 @@ def tick(keys):
             player.next_frame()
 
             # first assume we are not moving
-            player.display.xspeed = 0
-            player.display.yspeed = 0
+            player.sprite_box.xspeed = 0
+            player.sprite_box.yspeed = 0
 
             # accept controls
             for key in keys:
                 player.read_key(key)
 
-            player.display.y += player.display.yspeed
-            player.display.x += player.display.xspeed
+            player.sprite_box.y += player.sprite_box.yspeed
+            player.sprite_box.x += player.sprite_box.xspeed
 
         dead_snowballs = set()
         for snowball in snowballs:
             snowball.next_frame()
             # TODO: The players and snowballs should handle this themselves in next_frame()
-            snowball.display.x += snowball.display.xspeed
-            snowball.display.y += snowball.display.yspeed
-            # snowballs aren't affected by anything, so we can draw them immediately
-            camera.draw(snowball.display)
+            snowball.sprite_box.x += snowball.sprite_box.xspeed
+            snowball.sprite_box.y += snowball.sprite_box.yspeed
 
-            if snowball.display.x <= 0:
+            # draw snowballs first
+            camera.draw(snowball.sprite_box)
+
+            # things that can destroy the snowball
+            if snowball.sprite_box.x <= 0:
                 dead_snowballs.add(snowball)
 
-        # this feels stupid but I can't change the size of snowballs during iteration
-        for snowball in dead_snowballs:
-            snowballs.remove(snowball)
+            # TODO: We loop through every group of items multiple times
+            # it would be better to loop through ALL sprites, and just have custom touches impls
+            # which known what to do to each of the items based on what types they are
+            # TODO TODO TODO this is a big one
+            if snowball in dead_snowballs:
+                continue
+
+            for block in blocks:
+                if snowball.sprite_box.touches(block):
+                    dead_snowballs.add(snowball)
+                    break
+
+            if snowball in dead_snowballs:
+                continue
+
+            for weapon in weapons:
+                if snowball.sprite_box.touches(weapon.sprite_box):
+                    dead_snowballs.add(snowball)
+                    break
+
+            if snowball in dead_snowballs:
+                continue
+
+            for player in players:
+                if snowball.sprite_box.touches(player.sprite_box):
+                    dead_snowballs.add(snowball)
+                    break
 
         for weapon in weapons:
             weapon.next_frame()
             # draw weapons before players, if one gets triggered early that will happen on the next frame
-            camera.draw(weapon.display)
+            camera.draw(weapon.sprite_box)
 
         # If one bomb hits another, the second should explode immediately
         # NOTE: This could be made more efficient if performance becomes an issue
@@ -175,16 +200,25 @@ def tick(keys):
                 if weapon1 == weapon2 or not (weapon1.is_activated or weapon2.is_activated) or (weapon1.is_activated and weapon2.is_activated):
                     continue
                 # exactly 1 of the weapons is activated
-                if weapon1.explosion_is_touching(weapon2.display):
+                if weapon1.explosion_is_touching(weapon2.sprite_box):
                     weapon2.trigger_early()
-                elif weapon2.explosion_is_touching(weapon1.display):
+                elif weapon2.explosion_is_touching(weapon1.sprite_box):
                     weapon1.trigger_early()
 
+            # blocks can be destroyed by explosions
             if weapon1.is_activated:
+                blocks_to_destroy = []
+                for block in blocks:
+                    if weapon1.explosion_is_touching(block):
+                        blocks_to_destroy.append(block)
+                for block in blocks_to_destroy:
+                    blocks.remove(block)
+                    platforms.remove(block)
                 continue
+
             # snowballs also set off bombs
             for snowball in snowballs:
-                if weapon1.display.touches(snowball.display):
+                if weapon1.sprite_box.touches(snowball.sprite_box):
                     weapon1.trigger_early()
 
         # move player back if it's overlapping with something
@@ -194,27 +228,31 @@ def tick(keys):
         for player in players:
             # Players should not be able to run through each other
             for other_player in players:
-                if other_player != player and other_player.display.touches(player.display):
-                    player.display.move_to_stop_overlapping(other_player.display)
+                if other_player != player and other_player.sprite_box.touches(player.sprite_box):
+                    player.sprite_box.move_to_stop_overlapping(other_player.sprite_box)
 
             # NOTE: This has to come after player-player interactions to prioritize not being pushed off the map
             for platform in platforms:
-                if player.display.touches(platform):
-                    player.display.move_to_stop_overlapping(platform)
-                if player.display.bottom_touches(platform):
-                    player.display.move_to_stop_overlapping(platform)
+                if player.sprite_box.touches(platform):
+                    player.sprite_box.move_to_stop_overlapping(platform)
+                if player.sprite_box.bottom_touches(platform):
+                    player.sprite_box.move_to_stop_overlapping(platform)
 
             # interact with weapons
             # TODO: Maybe players shouldn't be able to run through idle bombs... but what about when they are first laid?
             for weapon in weapons:
-                if weapon.explosion_is_touching(player.display):
+                if weapon.explosion_is_touching(player.sprite_box):
                     player.die()
             
             for snowball in snowballs:
-                if snowball.display.touches(player.display):
+                if snowball.sprite_box.touches(player.sprite_box):
                     player.die()
 
-            camera.draw(player.display)
+            camera.draw(player.sprite_box)
+
+        #### cleanup ####
+        for snowball in dead_snowballs:
+            snowballs.remove(snowball)
 
         # Check if the game_end_point should be scheduled
         if not game_end_point:
@@ -228,6 +266,7 @@ def tick(keys):
             if not non_krampus_alive or not krampus_alive:
                 game_end_point = game_age + 50
 
+    # TODO: what if everyone dies at the same time? Right now Krampus would win
     else:  # game_age >= game_end_point
         # check who won, ties go to Krampus
         # TODO: Put this in a fn, it's repeated code
@@ -263,7 +302,7 @@ def tick(keys):
         restart = gamebox.from_text(500, 600, "Press B to play again", "Arial", 40, text_color, True)
         camera.draw(restart)
         if pygame.K_b in keys:
-            reset_game()
+            restart_game()
 
     camera.display()
 
