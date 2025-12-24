@@ -25,6 +25,7 @@ class Bomb:
         self.sprite_box.scale_by(1)
         self.age = 0
         self.lifetime = lifetime
+        self.explosion_sound = pygame.mixer.Sound("sounds/explosion.mp3")
         self.triggered_early = False
 
     def trigger_early(self) -> None:
@@ -32,10 +33,14 @@ class Bomb:
 
     def next_frame(self) -> None:
         self.age += 1
+
+        # trigger explosion
         if not self.exploding and (self.triggered_early or self.age > self.lifetime * .75):
             self.exploding = True
             self.sprite_box.scale_by(
                 self.explosion_scale)  # NOTE: this is not the most robust way to fix this but works for now
+            self.explosion_sound.play()
+
         self.frame += 1
         if (self.exploding and self.frame >= 1) or (not self.exploding and self.frame >= 18):
             self.frame = 0

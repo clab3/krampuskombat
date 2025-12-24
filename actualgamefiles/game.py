@@ -12,6 +12,11 @@ from snowball import Snowball
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+pygame.mixer.init()
+# this will only play the first time through, in the title screen
+pygame.mixer.music.load("sounds/dark-tension.mp3")
+pygame.mixer.music.play()  # non-blocking
+
 camera = gamebox.Camera(1000, 800)
 weapons: set[Bomb] = set()
 snowballs: set[Snowball] = set()
@@ -70,8 +75,13 @@ def restart_game():
     blocks = []
     for x in [150, 325, 500, 675, 850]:
         for y in [100, 250, 400, 550, 700]:
-            new_block = gamebox.from_color(x, y, "brown", 40, 40)
+            new_block = gamebox.from_image(x, y, "images/box.png")
+            new_block.width = 40
+            new_block.height = 40
             blocks.append(new_block)
+
+    pygame.mixer.music.load("sounds/combat-epic.mp3")
+    pygame.mixer.music.play()
 
 
 def tick(keys):
@@ -107,7 +117,7 @@ def tick(keys):
     elif game_on and (not game_end_point or game_age < game_end_point):
         game_age += 1
 
-        camera.clear("cyan")
+        camera.clear("gray")
         floor = gamebox.from_color(500, 800, "black", 1200, 30)
         ceiling = gamebox.from_color(500, 0, "black", 1200, 30)
         left_wall = gamebox.from_color(0, 400, "black", 30, 1200)
@@ -265,6 +275,11 @@ def tick(keys):
                     non_krampus_alive = True
             if not non_krampus_alive or not krampus_alive:
                 game_end_point = game_age + 50
+                if non_krampus_alive:
+                    pygame.mixer.music.load("sounds/funny-dancing-kids.mp3")
+                else:
+                    pygame.mixer.music.load("sounds/valhalla-awaits.mp3")  # krampus
+                pygame.mixer.music.play()  # non-blocking
 
     # TODO: what if everyone dies at the same time? Right now Krampus would win
     else:  # game_age >= game_end_point

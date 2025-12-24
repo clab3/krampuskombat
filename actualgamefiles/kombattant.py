@@ -2,6 +2,7 @@ import logging
 import os
 
 import gamebox
+import pygame
 
 from bomb import Bomb
 from controlconfig import ControlConfig
@@ -21,6 +22,8 @@ class Kombattant:
         self.current_weapon = None
         self.all_weapons = all_weapons
         self.player_number = player_number
+
+        # Krampus
         if player_number == 0:
             idle_sprites_file = os.path.join(CURRENT_DIR, "images/krampus_idle_sprites.png")
             self.idle_sprites = gamebox.load_sprite_sheet(
@@ -39,6 +42,8 @@ class Kombattant:
             self.origin_x_pos = 500
             self.origin_y_pos = 50
             display_scale = .4
+
+        # Not Krampus
         else:
             sprites_file = os.path.join(CURRENT_DIR,
                                         "images/egg.png") if player_number == 1 else os.path.join(CURRENT_DIR,
