@@ -7,7 +7,9 @@ import gamebox
 from bomb import Bomb
 from controlconfig import ControlConfig
 from kombattant import Kombattant
+from loadout import Loadout
 from snowball import Snowball
+from spriteconfig import SpriteConfig
 
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +34,14 @@ krampus = Kombattant(
     ControlConfig(
         pygame.K_RIGHT, pygame.K_LEFT, pygame.K_UP, pygame.K_DOWN, pygame.K_RSHIFT, pygame.K_LSHIFT
     ),
-    krampus_speed
+    Loadout(
+        .4,
+        SpriteConfig("images/krampus_idle_sprites.png", 2, 4, 8),
+        SpriteConfig("images/krampus_attack_sprites.png", 1, 4, 3),
+    ),
+    krampus_speed,
+    500,
+    50,
 )
 player_1 = Kombattant(
     1,
@@ -40,7 +49,14 @@ player_1 = Kombattant(
     ControlConfig(
         pygame.K_d, pygame.K_a, pygame.K_w, pygame.K_s, pygame.K_q, pygame.K_e
     ),
-    player_speed
+    Loadout(
+        .15,
+        SpriteConfig("images/egg.png", 1, 1, 1),
+        SpriteConfig("images/egg.png", 1, 1, 1),
+    ),
+    player_speed,
+    100,
+    700,
 )
 player_2 = Kombattant(
     2, 
@@ -48,7 +64,14 @@ player_2 = Kombattant(
     ControlConfig(
         pygame.K_k, pygame.K_h, pygame.K_u, pygame.K_j, pygame.K_y, pygame.K_i
     ),
-    player_speed
+    Loadout(
+        .15,
+        SpriteConfig("images/egg_green.png", 1, 1, 1),
+        SpriteConfig("images/egg_green.png", 1, 1, 1),
+    ),
+    player_speed,
+    900,
+    700,
 )
 players = [krampus, player_1, player_2]
 stars = []

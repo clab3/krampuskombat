@@ -1,3 +1,6 @@
+
+# TODO: Prob doesn't need its own file considering its POD. Along with SpriteConfig
+
 class ControlConfig:
     def __init__(self, right, left, up, down, special_1, special_2):
         self.right = right

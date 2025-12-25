@@ -6,6 +6,7 @@ import pygame
 
 from bomb import Bomb
 from controlconfig import ControlConfig
+from loadout import Loadout
 
 # TODO: This is copypasta from game.py and shouldn't be needed
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -15,63 +16,42 @@ class Kombattant:
 
     """Player 0 is Krampus."""
 
-    def __init__(self, player_number: int, all_weapons: set, control_config: ControlConfig, speed: int):
+    def __init__(
+            self,
+            player_number: int,
+            all_weapons: set,
+            control_config: ControlConfig,
+            loadout: Loadout,
+            speed: int,
+            x_origin: int,
+            y_origin: int,
+    ):
         self.speed = speed
+        self.origin_x_pos = x_origin
+        self.origin_y_pos = y_origin
         self.is_krampus = player_number == 0
         self.is_dead = False
         self.current_weapon = None
         self.all_weapons = all_weapons
         self.player_number = player_number
-
-        # Krampus
-        if player_number == 0:
-            idle_sprites_file = os.path.join(CURRENT_DIR, "images/krampus_idle_sprites.png")
-            self.idle_sprites = gamebox.load_sprite_sheet(
-                idle_sprites_file,
-                2,
-                4
-            )
-            attack_sprites_file = os.path.join(CURRENT_DIR, "images/krampus_attack_sprites.png")
-            self.attack_sprites = gamebox.load_sprite_sheet(
-                attack_sprites_file,
-                1,
-                4
-            )
-            self.num_idle_sprites = 8
-            self.num_attack_sprites = 4
-            self.origin_x_pos = 500
-            self.origin_y_pos = 50
-            display_scale = .4
+        self.loadout = loadout
 
         # Not Krampus
-        else:
-            sprites_file = os.path.join(CURRENT_DIR,
-                                        "images/egg.png") if player_number == 1 else os.path.join(CURRENT_DIR,
-                                                                                                  "images/egg_green.png")
-            self.idle_sprites = gamebox.load_sprite_sheet(
-                sprites_file, 1, 1
-            )
-            self.attack_sprites = self.idle_sprites
-            self.num_attack_sprites = 1
-            self.num_idle_sprites = 1
-            self.origin_y_pos = 700
-            if player_number == 1:
-                self.origin_x_pos = 100
-            else:
-                self.origin_x_pos = 900
-            display_scale = .15
+            # sprites_file = os.path.join(CURRENT_DIR,
+            #                             "images/egg.png") if player_number == 1 else os.path.join(CURRENT_DIR,
+            #                                                                                       "images/egg_green.png")
+            # self.idle_sprites = gamebox.load_sprite_sheet(
+            #     sprites_file, 1, 1
+            # )
+            # self.attack_sprites = self.idle_sprites
+            # self.num_attack_sprites = 1
+            # self.num_idle_sprites = 1
+            # display_scale = .15
 
         self.is_idle = True
-        death_sprites_file = os.path.join(CURRENT_DIR, "images/egg_death_sprites.png")
-        self.death_sprites = gamebox.load_sprite_sheet(
-            death_sprites_file,
-            1,
-            12
-        )
-        self.num_death_sprites = 12
         self.frame = 0
-        self.sprite_box = gamebox.from_image(self.origin_x_pos, self.origin_y_pos, self.idle_sprites[self.frame])
-        self.sprite_box.scale_by(display_scale)
+        self.sprite_box = gamebox.from_image(self.origin_x_pos, self.origin_y_pos, self.loadout.idle_sprites[self.frame])
+        self.sprite_box.scale_by(self.loadout.display_scale)
         self.current_weapon_life = 0
         self.control_config = control_config
 
@@ -90,21 +70,21 @@ class Kombattant:
         if self.is_dead:
             # hack to slow down animation
             adjusted_frame = self.frame // 4
-            if self.frame >= self.num_death_sprites:
-                adjusted_frame = self.num_death_sprites - 1
-        elif (self.is_idle and self.frame >= self.num_idle_sprites) or (
-                not self.is_idle and self.frame >= self.num_attack_sprites):
+            if self.frame >= self.loadout.num_death_sprites:
+                adjusted_frame = self.loadout.num_death_sprites - 1
+        elif (self.is_idle and self.frame >= self.loadout.num_idle_sprites) or (
+                not self.is_idle and self.frame >= self.loadout.num_attack_sprites):
             self.frame = 0
             adjusted_frame = self.frame
         else:
             # yucky
             adjusted_frame = self.frame
         if self.is_dead:
-            sprites = self.death_sprites
+            sprites = self.loadout.death_sprites
         elif self.is_idle:
-            sprites = self.idle_sprites
+            sprites = self.loadout.idle_sprites
         else:
-            sprites = self.attack_sprites
+            sprites = self.loadout.attack_sprites
         self.sprite_box.image = sprites[adjusted_frame]
 
     def read_key(self, key):
