@@ -1,4 +1,3 @@
-import os
 import random
 
 import pygame
@@ -11,8 +10,6 @@ from loadout import Loadout
 from snowball import Snowball
 from spriteconfig import SpriteConfig
 
-
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 pygame.mixer.init()
 # this will only play the first time through, in the title screen
@@ -299,6 +296,8 @@ def tick(keys):
             if not non_krampus_alive or not krampus_alive:
                 game_end_point = game_age + 50
                 if non_krampus_alive:
+                    # NOTE: if a non-Krampus player kills themselves at the last second (after Krampus already died),
+                    # they will lose, but this song will still play
                     pygame.mixer.music.load("sounds/funny-dancing-kids.mp3")
                 else:
                     pygame.mixer.music.load("sounds/valhalla-awaits.mp3")  # krampus

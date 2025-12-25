@@ -1,11 +1,9 @@
 import logging
 import os
 
-import gamebox
-import pygame
-
 from bomb import Bomb
 from controlconfig import ControlConfig
+import gamebox
 from loadout import Loadout
 
 # TODO: This is copypasta from game.py and shouldn't be needed
@@ -35,19 +33,6 @@ class Kombattant:
         self.all_weapons = all_weapons
         self.player_number = player_number
         self.loadout = loadout
-
-        # Not Krampus
-            # sprites_file = os.path.join(CURRENT_DIR,
-            #                             "images/egg.png") if player_number == 1 else os.path.join(CURRENT_DIR,
-            #                                                                                       "images/egg_green.png")
-            # self.idle_sprites = gamebox.load_sprite_sheet(
-            #     sprites_file, 1, 1
-            # )
-            # self.attack_sprites = self.idle_sprites
-            # self.num_attack_sprites = 1
-            # self.num_idle_sprites = 1
-            # display_scale = .15
-
         self.is_idle = True
         self.frame = 0
         self.sprite_box = gamebox.from_image(self.origin_x_pos, self.origin_y_pos, self.loadout.idle_sprites[self.frame])
@@ -106,7 +91,8 @@ class Kombattant:
         if self.current_weapon:
             logging.info(f'Player #{self.player_number} blocked from dropping bomb bc it has already deployed 1')
             return
-        self.current_weapon = Bomb(self.sprite_box.x, self.sprite_box.y, self.bomb_life)
+        # Krampus bombs have blue fire
+        self.current_weapon = Bomb(self.sprite_box.x, self.sprite_box.y, self.bomb_life, is_blue=self.is_krampus)
         self.current_weapon_life = self.bomb_life
         self.all_weapons.add(self.current_weapon)
 

@@ -8,9 +8,13 @@ import gamebox
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class Bomb:
-    def __init__(self, x_pos: int, y_pos: int, lifetime: int):
+    def __init__(self, x_pos: int, y_pos: int, lifetime: int, is_blue: bool = False):
         self.exploding = False
-        explode_sprites_file = os.path.join(CURRENT_DIR, "images/red_explosion_big.png")
+        if is_blue:
+            explode_sprites_file = os.path.join(CURRENT_DIR, "images/blue_explosion_big.png")
+        else:
+            explode_sprites_file = os.path.join(CURRENT_DIR, "images/red_explosion_big.png")
+
         self.explode_sprites = gamebox.load_sprite_sheet(explode_sprites_file, 1, 1)
         # NOTE: This will not quite make sense if I animate the explosion
         explosion_surface = pygame.image.load(explode_sprites_file).convert_alpha()

@@ -1,7 +1,6 @@
 import os
 
 
-
 def load_images_from_directory(directory: str) -> list[str]:
     """Returns a list of image file paths."""
     images = []
